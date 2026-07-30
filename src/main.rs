@@ -1,4 +1,8 @@
+mod storage;
+mod grocery;
+
 use yew::prelude::*;
+use grocery::GroceryList; // Bring the component into scope
 
 #[function_component(App)]
 fn app() -> Html {
@@ -54,6 +58,15 @@ fn app() -> Html {
                         }
                     }
                 }
+                {
+        if *active_tab == "groceries" {
+            html! {  }
+        } else {
+            html! { 
+{"Placeholder for "}{ &*active_tab }
+ }
+        }
+    }
             </main>
 
             <nav class="nav">

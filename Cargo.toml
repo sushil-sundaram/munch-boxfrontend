@@ -6,3 +6,5 @@ edition = "2021"
 [dependencies]
 shared = { path = "../shared" }
 yew = { version = "0.21", features = ["csr"] }
+gloo-storage = "0.3.0"
+uuid = { version = "1.8", features = ["v4", "js"] }
