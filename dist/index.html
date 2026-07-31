@@ -1,13 +1,469 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MunchBox</title>
-    
-<script type="module" nonce="NeI9o/gmsd2CqImZLndg2Q==">
-import init, * as bindings from '/frontend-ea65cf66b8f373c6.js';
-const wasm = await init('/frontend-ea65cf66b8f373c6_bg.wasm');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MunchBox - Meal Planner & Recipe Manager</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 600px;
+            background-color: #0f172a;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            border-left: 1px solid #1e293b;
+            border-right: 1px solid #1e293b;
+        }
+
+        .header {
+            padding: 1rem 1.25rem;
+            background-color: #1e293b;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6366f1;
+        }
+
+        .header-logo {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            color: #f8fafc;
+        }
+
+        .ui-icon {
+            display: inline-block;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+
+        .card-title-row {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            color: #818cf8;
+        }
+
+        button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .nav button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0.4rem 1rem;
+            border-radius: 4px;
+            transition: all 0.15s ease;
+        }
+
+        .content {
+            flex: 1;
+            padding: 1.25rem;
+            padding-bottom: 5rem;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 1.25rem;
+            letter-spacing: -0.01em;
+        }
+
+        /* Bottom Nav */
+        .nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 600px;
+            background-color: #1e293b;
+            border-top: 1px solid #334155;
+            display: flex;
+            justify-content: space-around;
+            padding: 0.6rem 0;
+            z-index: 100;
+        }
+
+        .nav button {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: all 0.15s ease;
+        }
+
+        .nav button:hover {
+            color: #f8fafc;
+            background-color: #334155;
+        }
+
+        .nav button.active {
+            color: #6366f1;
+            background-color: #334155;
+        }
+
+        /* Generic Inputs & Forms */
+        input[type="text"], input[type="number"], input[type="url"], select, textarea {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            color: #f8fafc;
+            padding: 0.55rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #6366f1;
+        }
+
+        /* Toast Notification */
+        .toast-notification {
+            background-color: #1e293b;
+            border: 1px solid #6366f1;
+            color: #818cf8;
+            padding: 0.65rem 0.85rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        /* Recipe Book Styles */
+        .recipe-book-container { display: flex; flex-direction: column; gap: 1rem; }
+        .recipe-header-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+        
+        button {
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 4px;
+            padding: 0.55rem 0.85rem;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .btn-toggle-url, .btn-toggle-form {
+            background-color: #1e293b;
+            color: #f8fafc;
+            border: 1px solid #334155;
+        }
+        .btn-toggle-url:hover, .btn-toggle-form:hover {
+            background-color: #334155;
+        }
+
+        .url-scrape-form, .recipe-form {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .url-scrape-form h3, .recipe-form h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+
+        .scrape-help {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .url-input-row { display: flex; gap: 0.5rem; }
+        .url-input-row input { flex: 1; }
+
+        .btn-scrape, .btn-save-recipe {
+            background-color: #6366f1;
+            color: #ffffff;
+            border: 1px solid #6366f1;
+        }
+        .btn-scrape:hover, .btn-save-recipe:hover {
+            background-color: #4f46e5;
+        }
+
+        .form-row { display: flex; flex-direction: column; gap: 0.3rem; }
+        .form-row label { font-size: 0.8rem; font-weight: 600; color: #94a3b8; }
+        .flex-1 { flex: 1; }
+
+        .form-section-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6366f1;
+            margin-top: 0.4rem;
+        }
+
+        .ingredient-row-edit {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background-color: #0f172a;
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #334155;
+        }
+
+        .staple-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            cursor: pointer;
+        }
+
+        .btn-remove-row {
+            background: none;
+            border: 1px solid #dc2626;
+            color: #ef4444;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.75rem;
+        }
+        .btn-remove-row:hover { background-color: #ef4444; color: #ffffff; }
+
+        .btn-add-row {
+            background-color: #0f172a;
+            color: #6366f1;
+            border: 1px solid #6366f1;
+            padding: 0.45rem;
+        }
+        .btn-add-row:hover { background-color: #1e293b; }
+
+        .recipes-grid { display: flex; flex-direction: column; gap: 0.85rem; }
+        
+        .recipe-card {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .card-title-group { flex: 1; display: flex; flex-direction: column; gap: 0.2rem; }
+        .card-title { font-size: 1.05rem; font-weight: 700; color: #f8fafc; }
+
+        .btn-delete-recipe {
+            background-color: transparent;
+            border: 1px solid #475569;
+            color: #94a3b8;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+        }
+        .btn-delete-recipe:hover {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .star-rating, .star-rating-selector { display: flex; gap: 0.15rem; font-size: 1rem; cursor: pointer; user-select: none; }
+        .star { color: #475569; }
+        .star.active { color: #f59e0b; }
+
+        .section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6366f1;
+            font-weight: 700;
+        }
+
+        .ingredients-list {
+            list-style: none;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .ingredients-list li { display: flex; align-items: center; gap: 0.4rem; }
+
+        .badge-staple {
+            background-color: #334155;
+            color: #f59e0b;
+            font-size: 0.7rem;
+            padding: 0.1rem 0.35rem;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .instructions-text {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            white-space: pre-line;
+            line-height: 1.45;
+        }
+
+        /* Planner Grid */
+        .planner-container { display: flex; flex-direction: column; gap: 1rem; }
+        .planner-header-actions { display: flex; justify-content: flex-end; }
+
+        .btn-generate-groceries {
+            background-color: #6366f1;
+            color: #ffffff;
+            border: 1px solid #6366f1;
+            padding: 0.6rem 1rem;
+        }
+        .btn-generate-groceries:hover { background-color: #4f46e5; }
+
+        .planner-grid { display: flex; flex-direction: column; gap: 0.85rem; }
+        
+        .day-card {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .day-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #f8fafc;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 0.4rem;
+        }
+
+        .day-slots { display: flex; flex-direction: column; gap: 0.5rem; }
+        .meal-slot { display: flex; align-items: center; gap: 0.6rem; }
+        .slot-label { width: 80px; font-size: 0.8rem; font-weight: 600; color: #94a3b8; }
+        .meal-slot select { flex: 1; }
+
+        /* Grocery Container */
+        .grocery-container { display: flex; flex-direction: column; gap: 1rem; }
+        .grocery-header { display: flex; justify-content: flex-between; align-items: center; }
+        .sync-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        
+        .sync-status {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+        }
+        .sync-status.idle { background-color: #334155; color: #cbd5e1; }
+        .sync-status.syncing { background-color: #1e3a8a; color: #93c5fd; }
+        .sync-status.success { background-color: #064e3b; color: #6ee7b7; }
+        .sync-status.error { background-color: #7f1d1d; color: #fca5a5; }
+
+        .btn-sync {
+            background-color: #1e293b;
+            color: #f8fafc;
+            border: 1px solid #334155;
+        }
+        .btn-sync:hover { background-color: #334155; }
+
+        .input-row { display: flex; gap: 0.4rem; align-items: center; }
+        .btn-add {
+            background-color: #6366f1;
+            color: #ffffff;
+            border: 1px solid #6366f1;
+        }
+        .btn-add:hover { background-color: #4f46e5; }
+
+        .actions-row { display: flex; justify-content: space-between; gap: 0.5rem; }
+        .btn-toggle-staples, .btn-sweep {
+            background-color: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            font-size: 0.8rem;
+        }
+        .btn-toggle-staples:hover, .btn-sweep:hover {
+            background-color: #334155;
+            color: #f8fafc;
+        }
+
+        .grocery-list { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+        
+        .grocery-item {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            padding: 0.65rem 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+        .grocery-item:hover { background-color: #334155; }
+
+        .grocery-item.bought {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+
+        .item-info { display: flex; align-items: center; gap: 0.6rem; }
+        .item-qty-badge {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: #cbd5e1;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+        }
+        .item-name { font-size: 0.9rem; color: #f8fafc; }
+        .item-checkbox { font-family: monospace; font-size: 0.85rem; color: #94a3b8; }
+    </style>
+<link rel="modulepreload" href="/frontend-56a929bc6cf839c6.js" crossorigin=anonymous integrity="sha384-/l+dy7pSGKS2xcxdhvdR/RPNZuh30RkRSyF+vQdNqkQYQXIfD7hU+9hWdt0Kzlu3"><link rel="preload" href="/frontend-56a929bc6cf839c6_bg.wasm" crossorigin=anonymous integrity="sha384-v3HQGxKfKd8saUZwhjqg0lXW21K2kWgkui3SkW4xDMPGjJeSh1gdLWps27ooBSNR" as="fetch" type="application/wasm"></head>
+<body>
+    <div id="main"></div>
+
+<script type="module" nonce="l8nwprv4+HVqOcBHbFdP4Q==">
+import init, * as bindings from '/frontend-56a929bc6cf839c6.js';
+const wasm = await init('/frontend-56a929bc6cf839c6_bg.wasm');
 
 
 window.wasmBindings = bindings;
@@ -15,190 +471,5 @@ window.wasmBindings = bindings;
 
 dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
 
-</script>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background: #f5f0eb;
-            color: #2d2a26;
-            min-height: 100vh;
-        }
-        .app {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            max-width: 480px;
-            margin: 0 auto;
-            background: #fff;
-        }
-        .header {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 1rem 1.25rem;
-            background: #ff6b35;
-            color: #fff;
-            font-size: 1.25rem;
-            font-weight: 700;
-        }
-        .header-emoji { font-size: 1.5rem; }
-        .content {
-            flex: 1;
-            padding: 1.5rem 1.25rem;
-        }
-        .content h2 { margin-bottom: 0.5rem; }
-        .content p { color: #666; }
-        .nav {
-            display: flex;
-            border-top: 1px solid #e8e4df;
-            background: #faf8f6;
-        }
-        .nav button {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.75rem 0.5rem;
-            border: none;
-            background: none;
-            cursor: pointer;
-            font-size: 0.75rem;
-            color: #888;
-        }
-        .nav button.active { color: #ff6b35; font-weight: 600; }
-        .nav button span:first-child { font-size: 1.25rem; }
-    </style>
-<link rel="modulepreload" href="/frontend-ea65cf66b8f373c6.js" crossorigin=anonymous integrity="sha384-WrDFxshH1URh54JNqxm1mMiXepCXn0wrwQYWXczeZ5iThSTCoIefdkNDkV+2ExFE"><link rel="preload" href="/frontend-ea65cf66b8f373c6_bg.wasm" crossorigin=anonymous integrity="sha384-9r14umRZNMLEWj10K/TUk3gBMQM2jmcxbwvWYIRlZMXEkzCMdLQk9d0KnbPcOL+d" as="fetch" type="application/wasm"></head>
-<body><script>"use strict";
-
-(function () {
-
-    const address = '{{__TRUNK_ADDRESS__}}';
-    const base = '{{__TRUNK_WS_BASE__}}';
-    let protocol = '';
-    protocol =
-        protocol
-            ? protocol
-            : window.location.protocol === 'https:'
-                ? 'wss'
-                : 'ws';
-    const url = protocol + '://' + address + base + '.well-known/trunk/ws';
-
-    class Overlay {
-        constructor() {
-            // create an overlay
-            this._overlay = document.createElement("div");
-            const style = this._overlay.style;
-            style.height = "100vh";
-            style.width = "100vw";
-            style.position = "fixed";
-            style.top = "0";
-            style.left = "0";
-            style.backgroundColor = "rgba(222, 222, 222, 0.5)";
-            style.fontFamily = "sans-serif";
-            // not sure that's the right approach
-            style.zIndex = "1000000";
-            style.backdropFilter = "blur(1rem)";
-
-            const container = document.createElement("div");
-            // center it
-            container.style.position = "absolute";
-            container.style.top = "30%";
-            container.style.left = "15%";
-            container.style.maxWidth = "85%";
-
-            this._title = document.createElement("div");
-            this._title.innerText = "Build failure";
-            this._title.style.paddingBottom = "2rem";
-            this._title.style.fontSize = "2.5rem";
-
-            this._message = document.createElement("div");
-            this._message.style.whiteSpace = "pre-wrap";
-
-            const icon= document.createElement("div");
-            icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="#dc3545" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>';
-            this._title.prepend(icon);
-
-            container.append(this._title, this._message);
-            this._overlay.append(container);
-
-            this._inject();
-            window.setInterval(() => {
-                this._inject();
-            }, 250);
-        }
-
-        set reason(reason) {
-            this._message.textContent = reason;
-        }
-
-        _inject() {
-            if (!this._overlay.isConnected) {
-                // prepend it
-                document.body?.prepend(this._overlay);
-            }
-        }
-
-    }
-
-    class Client {
-        constructor(url) {
-            this.url = url;
-            this.poll_interval = 5000;
-            this._overlay = null;
-        }
-
-        start() {
-            const ws = new WebSocket(this.url);
-            ws.onmessage = (ev) => {
-                const msg = JSON.parse(ev.data);
-                switch (msg.type) {
-                    case "reload":
-                        this.reload();
-                        break;
-                    case "buildFailure":
-                        this.buildFailure(msg.data)
-                        break;
-                }
-            };
-            ws.onclose = this.onclose;
-        }
-
-        onclose() {
-            window.setTimeout(
-                () => {
-                    // when we successfully reconnect, we'll force a
-                    // reload (since we presumably lost connection to
-                    // trunk due to it being killed, so it will have
-                    // rebuilt on restart)
-                    const ws = new WebSocket(this.url);
-                    ws.onopen = () => window.location.reload();
-                    ws.onclose = this.onclose;
-                },
-                this.poll_interval);
-        }
-
-        reload() {
-            window.location.reload();
-        }
-
-        buildFailure({reason}) {
-            // also log the console
-            console.error("Build failed:", reason);
-
-            console.debug("Overlay", this._overlay);
-
-            if (!this._overlay) {
-                this._overlay = new Overlay();
-            }
-            this._overlay.reason = reason;
-        }
-    }
-
-    new Client(url).start();
-
-})()
 </script></body>
 </html>
