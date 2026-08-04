@@ -2,12 +2,22 @@ use gloo_net::http::Request;
 use serde_json::json;
 use shared::{GroceryItem, Recipe};
 
-const BACKEND_URL: &str = "http://localhost:3000";
+fn get_backend_url() -> String {
+    if let Some(window) = web_sys::window() {
+        if let Ok(location) = window.location().hostname() {
+            if !location.is_empty() {
+                return format!("http://{}:3000", location);
+            }
+        }
+    }
+    "http://localhost:3000".to_string()
+}
 
 /// Send local grocery items to the Axum backend, upsert them in SQLite,
 /// and return the merged list from the server.
 pub async fn sync_groceries_with_backend(items: &[GroceryItem]) -> Result<Vec<GroceryItem>, String> {
-    let response = Request::post(&format!("{}/api/groceries/sync", BACKEND_URL))
+    let backend_url = get_backend_url();
+    let response = Request::post(&format!("{}/api/groceries/sync", backend_url))
         .json(items)
         .map_err(|e| format!("Failed to serialize payload: {}", e))?
         .send()
@@ -28,7 +38,8 @@ pub async fn sync_groceries_with_backend(items: &[GroceryItem]) -> Result<Vec<Gr
 
 /// Send a web or YouTube URL to Axum backend to scrape structured recipe details
 pub async fn scrape_recipe_from_url(url: &str) -> Result<Recipe, String> {
-    let response = Request::post(&format!("{}/api/recipes/scrape", BACKEND_URL))
+    let backend_url = get_backend_url();
+    let response = Request::post(&format!("{}/api/recipes/scrape", backend_url))
         .json(&json!({ "url": url }))
         .map_err(|e| format!("Failed to serialize payload: {}", e))?
         .send()
@@ -50,7 +61,8 @@ pub async fn scrape_recipe_from_url(url: &str) -> Result<Recipe, String> {
 
 /// Delete a recipe from the Axum backend
 pub async fn delete_recipe_from_backend(id: &str) -> Result<(), String> {
-    let response = Request::delete(&format!("{}/api/recipes/{}", BACKEND_URL, id))
+    let backend_url = get_backend_url();
+    let response = Request::delete(&format!("{}/api/recipes/{}", backend_url, id))
         .send()
         .await
         .map_err(|e| format!("Network error: {}", e))?;
